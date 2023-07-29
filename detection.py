@@ -9,14 +9,15 @@ import math
 import time
 
 def DETECT(model_path, 
-           is_screen_capture,
-           video_path = None, 
-           show_output = True,
+           is_screen_capture, # run detection on screen capture instead of video file
+           video_path = None, # input video path
+           show_output = True, # whether to stream the model detection output to the screen
            save_output = False,
            output_path = "output.mp4",
-           verbose = False,
+           verbose = False, # whether to print the model output (objects detected, inference time, etc.)to the console
            show_progress = True,
-           jump_to_second = None):
+           jump_to_second = None # skip to a specific second in the video
+           ):
     
     model = YOLO(model_path)
 
@@ -43,7 +44,7 @@ def DETECT(model_path,
     prev_ball_center = None
     score_timestamps = []
     
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
     progress_bar = tqdm(total=int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), desc="Processing frames", disable=not show_progress, ncols = 100) if show_progress else None
     
     while True:
@@ -59,7 +60,7 @@ def DETECT(model_path,
             img = np.array(screenshot)
             img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
         
-        frames_processed = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+
         start_time = time.time()
 
         results = model(img, 
@@ -69,7 +70,6 @@ def DETECT(model_path,
                         verbose = verbose)
         
         for r in results:
-            print("\n =========== \n")
             boxes = r.boxes
             hoop_box = (0, 0, 0, 0)
             hoop_box_area = 0
@@ -109,11 +109,11 @@ def DETECT(model_path,
                     ball_lower_than_previous = prev_ball_center is not None and prev_ball_center[1] > ball_center[1]
                     ball_above_hoop_previously = prev_ball_center is not None and prev_ball_center[1] > hoop_y1
                     if ball_is_in_hoop and ball_lower_than_previous and ball_above_hoop_previously:
-                        print(f"Ball {i}  Score!")
-                        print(f"Previous ball center: {prev_ball_center}")
-                        print(f"Current ball center: {ball_center}")
-                        print(f"ball is in hoop: {ball_is_in_hoop}")
-                        print(f"ball lower than previous: {ball_lower_than_previous}")
+                        # print(f"Ball {i}  Score!")
+                        # print(f"Previous ball center: {prev_ball_center}")
+                        # print(f"Current ball center: {ball_center}")
+                        # print(f"ball is in hoop: {ball_is_in_hoop}")
+                        # print(f"ball lower than previous: {ball_lower_than_previous}")
                         if frames_after_score is None or frames_after_score >= frames_to_wait:
                             
                             score += 1
@@ -171,9 +171,6 @@ def DETECT(model_path,
             })
             progress_bar.update(1)
 
-    
-
-
         # Write the processed frame to the video file
         if save_output:
             out.write(img)
@@ -182,7 +179,7 @@ def DETECT(model_path,
             
             
         
-        if cv2.waitKey(0) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             progress_bar.close() if show_progress else None
             break
             
@@ -200,16 +197,12 @@ def DETECT(model_path,
     cv2.destroyAllWindows()
     
     return score_timestamps
-
-def TRACK(model_path, video_path):
-    model = YOLO(model_path)
-    model.track(source = video_path,)
     
 def generateHighlight(video_path,
                       score_timestamps, 
                       clip_start_offset = 6, # number of seconds before scoring
                       clip_end_offset = 3,   # number of seconds after scoring
-                      output_path = "/Users/oscarwan/bballDetection/videos_clipped/scored"):
+                      output_path = "videos_clipped/scored"):
     
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Video codec
     cap = cv2.VideoCapture(video_path)
@@ -261,10 +254,10 @@ if __name__ == "__main__":
        #output_path="v9.mp4",
        verbose = False,
        show_progress = False,
-       jump_to_second = 5
+       # jump_to_second = 5
        )
     
-    model = YOLO('weights/v10_120_s.pt')
-    model.predict(source = video_path, show = True, device = "mps")
+    
+
 
 
