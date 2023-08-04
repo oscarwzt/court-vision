@@ -19,6 +19,8 @@ def DETECT(model_path,
            jump_to_second = None # skip to a specific second in the video
            ):
     
+    show_progress = not is_screen_capture
+    
     model = YOLO(model_path)
 
     if not is_screen_capture:
@@ -27,6 +29,7 @@ def DETECT(model_path,
         cap.set(cv2.CAP_PROP_POS_FRAMES, jump_to_second * fps) if jump_to_second is not None else None
     else:
         sct = mss()
+        fps = 30
 
     if save_output:
         # Get the dimensions and fps of the video frames
@@ -98,7 +101,7 @@ def DETECT(model_path,
                 main_label = i == main_label_index 
                 if model.names[int(box.cls)] == "basketball":
                     ball_center = ((x1 + x2) // 2, (y1 + y2) // 2)
-                    print(f"[{i}]:  ", prev_ball_center, '    ', ball_center)
+                    # print(f"[{i}]:  ", prev_ball_center, '    ', ball_center)
                     cv2.circle(img, ball_center, 2, (0, 255, 0), -1)
                     
                     hoop_x1, hoop_y1, hoop_x2, hoop_y2 = hoop_box
@@ -120,7 +123,7 @@ def DETECT(model_path,
                             frames_after_score = 0  
                             
                             # Get the timestamp and store it in the list
-                            timestamp = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0  # Get timestamp in seconds
+                            timestamp = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0  if not is_screen_capture else None# Get timestamp in seconds
                             score_timestamps.append(timestamp)
                     prev_ball_center = ball_center 
                 
