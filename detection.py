@@ -4,7 +4,7 @@ import numpy as np
 from mss import mss
 import os
 import psutil
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import math
 import time
 
@@ -246,20 +246,21 @@ def generateHighlight(video_path,
     
 if __name__ == "__main__":
     
-    video_path = 'videos_clipped/scored/clip_9_x.mp4'
-    
+    video_path = '/Users/oscarwan/bballDetection/videos/videos_full/20230626_Game4.mp4'
+
     #stamps = [28.328300000000002, 35.101733333333335, 54.554500000000004, 63.09636666666667, 80.9809, 90.85743333333333, 112.11200000000001, 135.16836666666669, 168.5684, 176.04253333333335, 213.37983333333335, 223.65676666666667, 246.57966666666667, 263.3964666666667, 266.63303333333334, 289.4224666666667, 300.73376666666667, 305.17153333333334, 311.97833333333335, 340.9406, 358.5582, 361.56120000000004, 380.9138666666667, 384.1838, 390.99060000000003, 411.37763333333334, 432.3319, 444.21043333333336, 462.2284333333333, 485.6184666666667, 498.8650333333334, 511.87803333333335, 521.3208000000001, 586.2857, 593.3260666666667]
     stamps = DETECT(model_path = 'weights/v10_120_s.pt', 
        is_screen_capture=False,
-       show_output = True, 
-       video_path = video_path,
-       save_output = False,
-       #output_path="v9.mp4",
+       show_output = False, # whether to stream the model detection output to the screen
+       video_path = video_path, # input video path
+       save_output = False, 
        verbose = False,
-       show_progress = False,
-       # jump_to_second = 5
+       show_progress = True,
+       jump_to_second = 400
        )
-    
+    generateHighlight(video_path = video_path, 
+                      score_timestamps = stamps,
+                      output_path=".")
     
 
 
