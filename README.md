@@ -30,11 +30,12 @@ The performance of this system is underwhelming, see below confusion matrix:
 
 We looked at the feature map to see if the model is looking at the wrong thing. It seems like ResNet is look at the correct things: we can tell that some of the filters are looking at the net, and some are looking at the ball (if present).
 Empty basket:
-![Miss Heatmap](display_images/miss_heatmap.png)
-with a ball:
-![Made Heatmap](display_images/made_heatmap.png)
+<img src="display_images/miss_heatmap.png" alt="Miss Heatmap" width="500"/>    
 
- 
+with a ball:
+<img src="display_images/made_heatmap.png" alt="Made Heatmap" width="500"/>
+
+We hypothesize that the poor performance of the system despite the excellent performance of ResNet50 during trainig and testing is due to data leakage. Because we have many images of hoops from the same backgrounds, the training, validation, and testing sets will contain images from the same background. To improve this, we need to first split the videos where we get the images from into 3 sets, and then crop the hoops.
 
 ### YOLO
 <img width="288" alt="image" src="https://github.com/oscarwzt/court-vision/assets/117058428/7ccef222-788b-4db5-a657-d25f40a593f0">
