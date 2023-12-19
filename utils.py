@@ -22,8 +22,17 @@ from base64 import b64encode
 import os
 from IPython.display import Video
 import subprocess
+from pytube import YouTube
+from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
+import shutil
+import moviepy.editor as mp
+import subprocess
+import datetime
+from yt_dlp import YoutubeDL
+import re
 
-def train_model(model, criterion, optimizer, train_loader, test_loader, num_epochs=10, chkpt_interval = 5, checkpoint_dir='./cls_chkpoint', early_stopping_patience=3):
+
+def train_model(model, criterion, optimizer, train_loader, test_loader, num_epochs=10, chkpt_interval = 5, checkpoint_dir='./cls_chkpoint', early_stopping_patience=3): 
     best_accuracy = 0.0  # Initialize with a threshold accuracy
     best_loss = float('inf')
     early_stopping_counter = 0
@@ -32,7 +41,7 @@ def train_model(model, criterion, optimizer, train_loader, test_loader, num_epoc
     model.to(device)
     
     now = datetime.datetime.now()
-    checkpoint_dir = os.path.join(checkpoint_dir, now.strftime('checkpoint_%Y-%m-%d-%H-%M'))
+    checkpoint_dir = os.path.join(checkpoint_dir, now.strftime('checkpoint_%Y-%m-%d-%H-%M') + f'_lr_{optimizer.param_groups[0]["lr"]}_batch_{train_loader.batch_size}')
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
     
@@ -48,17 +57,6 @@ def train_model(model, criterion, optimizer, train_loader, test_loader, num_epoc
         total_loss = 0.0
         correct_predictions = 0
         
-        # Early stopping check
-        if test_losses[epoch] < best_loss:
-            best_loss = test_losses[epoch]
-            early_stopping_counter = 0  # reset the early stopping counter if the validation loss improves
-        else:
-            early_stopping_counter += 1  # increment the counter if the validation loss does not improve
-            
-        if early_stopping_counter >= early_stopping_patience:
-            print(f"Early stopping triggered at epoch {epoch+1}. Validation loss did not improve for {early_stopping_patience} consecutive epochs.")
-            break
-        
         for inputs, targets in train_loader:
             inputs, targets = inputs.to(device), targets.to(device)
             optimizer.zero_grad()
@@ -71,7 +69,7 @@ def train_model(model, criterion, optimizer, train_loader, test_loader, num_epoc
             _, predicted = torch.max(outputs.data, 1)
             correct_predictions += (predicted == targets).sum().item()
         
-        avg_loss = total_loss / len(train_loader)
+        avg_loss = total_loss / len(train_loader.dataset)
         losses[epoch] = avg_loss
         train_accuracies[epoch] = correct_predictions / len(train_loader.dataset)
         
@@ -112,10 +110,10 @@ def train_model(model, criterion, optimizer, train_loader, test_loader, num_epoc
         
         # Print statistics
         if (epoch + 1) % 2 == 0 or epoch == 0:
-            print(f"Epoch [{epoch+1}/{num_epochs}]\t Avg Loss: {avg_loss:.4f}\t "
-                  f"Val Loss: {test_losses[epoch]:.4f}\t"
-                  f"TrainAcc: {train_accuracies[epoch]:.4f} \t TestAcc: {test_accuracies[epoch]:.4f}\t "
-                  f"Time: {(time.time() - temp):.4f}")
+            print(f"Epoch [{epoch+1}/{num_epochs}]\t Avg Loss: {avg_loss:.4f}  "
+                  f"[Val Loss]: {test_losses[epoch]:.4f}  "
+                  f"[Best Loss]: {best_loss:.4f}\t TestAcc: {test_accuracies[epoch]:.4f}  "
+                  f"[Time]: {(time.time() - temp):.4f}")
     
         history = {
             'train_loss': losses[:epoch+1].tolist(),
@@ -126,6 +124,16 @@ def train_model(model, criterion, optimizer, train_loader, test_loader, num_epoc
         # save history to checkpoint_dir as json
         with open(os.path.join(checkpoint_dir, 'history.json'), 'w') as f:
             json.dump(history, f)
+            
+        # Early stopping check
+        if test_losses[epoch] < best_loss:
+            best_loss = test_losses[epoch]
+            early_stopping_counter = 0  # reset the early stopping counter if the validation loss improves
+        else:
+            early_stopping_counter += 1  # increment the counter if the validation loss does not improve
+        if early_stopping_counter >= early_stopping_patience:
+            print(f"Early stopping triggered at epoch {epoch+1}. Validation loss did not improve for {early_stopping_patience} consecutive epochs.")
+            break
     
     return history
 
@@ -179,28 +187,46 @@ def load_checkpoint(model, checkpoint_path, num_classes = 2, ):
         model.load_state_dict(checkpoint['state_dict'])
     else:
         model.load_state_dict(checkpoint)
-        
+      
+def load_resnet18(cls_model_chkpoint_path, device):
+    cls_model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)    
+    load_checkpoint(cls_model, checkpoint_path = cls_model_chkpoint_path)
+    cls_model.to(device)
+    cls_model.eval()  
+    return cls_model
+
+def load_resnet50(cls_model_chkpoint_path, device):
+    cls_model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)    
+    load_checkpoint(cls_model, checkpoint_path = cls_model_chkpoint_path)
+    cls_model.to(device)
+    cls_model.eval()  
+    return cls_model
     
 def cls_predict_image(cls_model, img, preprocess, device, threshold = 0.5):
     input_tensor = preprocess(img).unsqueeze(0).to(device)
     with torch.no_grad():
         cls_output = cls_model(input_tensor)
-    probability = torch.nn.functional.softmax(cls_output[0], dim=0)
+    probability = torch.nn.functional.softmax(cls_output[0], dim=1)
 
     # prob, predicted_class = torch.max(probability, dim=0)
     # return predicted_class.item(), prob.item()
     return probability[1] > threshold, probability[1].item()
 
-def predict_hoop_box(img, cls_model, x1, y1, x2, y2, preprocess, device, grayscale = False, threshold = 0.5):
+def predict_hoop_box(img, cls_model, x1, y1, x2, y2, preprocess, device, threshold = 0.5):
     cropped_img = img[y1:y2, x1:x2]
-    cropped_img_pil = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR)) if not grayscale else Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2GRAY))
+    cropped_img_pil = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
     # Preprocess the cropped image
-    predicted_class, prob = cls_predict_image(cls_model, cropped_img_pil, preprocess, device)
+    predicted_class, prob = cls_predict_batch(cls_model, cropped_img_pil, preprocess, device, threshold)
     return cropped_img_pil, predicted_class, prob
 
 def cls_predict_batch(cls_model, batch_imgs, preprocess, device, threshold = 0.5):
     # Process and batch images
-    batch_tensor = torch.stack([preprocess(img).to(device) for img in batch_imgs])
+    # check if batch_imgs is a list.
+        
+    if isinstance(batch_imgs, list):
+        batch_tensor = torch.stack([preprocess(img).to(device) for img in batch_imgs])
+    else:
+        batch_tensor = preprocess(batch_imgs).unsqueeze(0).to(device)
 
     # Forward pass for the whole batch
     with torch.no_grad():
@@ -210,14 +236,11 @@ def cls_predict_batch(cls_model, batch_imgs, preprocess, device, threshold = 0.5
     probabilities = torch.nn.functional.softmax(cls_output, dim=1)
     return probabilities[:, 1] > threshold, probabilities[:, 1].tolist()
 
-def prepare_hoop_box_batch(img, cls_model,  preprocess, device, grayscale=False, threshold = 0.5):
+def predict_hoop_box_batch(img, cls_model,  preprocess, device, threshold = 0.5):
     cropped_imgs_pil = []
 
     for cropped_img in img:
-        if grayscale:
-            cropped_img_pil = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2GRAY))
-        else:
-            cropped_img_pil = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
+        cropped_img_pil = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR))
         cropped_imgs_pil.append(cropped_img_pil)
 
     return cls_predict_batch(cls_model, cropped_imgs_pil, preprocess, device, threshold)
@@ -311,3 +334,44 @@ def generateHighlight(video_path,
 
     # Close the input video
     cap.release()
+    
+    
+def download_video(url, save_path, resolution=None):
+    yt = YouTube(url)
+    if resolution:
+        video = yt.streams.filter(mime_type="video/mp4", res = resolution).first()
+    else:
+        video = yt.streams.filter(mime_type="video/mp4").order_by("resolution").desc().first()
+
+    # Reformat the video name
+    video_name = video.default_filename.replace(" ", "").replace("/", "_").replace("-", "_")
+    # add current date to the video_name in the format of "YYYY_MM_DD_video_name"
+    video_name = datetime.datetime.now().strftime("%Y_%m_%d_") + '_' + video_name 
+    
+    # Split the name and the extension
+    name_part, ext_part = os.path.splitext(video_name)
+
+    # Remove non-alphanumeric and non-underscore characters from the name part
+    name_part = re.sub(r'\W+', '', name_part)
+
+    # Join the name part and the extension part
+    video_name = name_part + ext_part
+    video_file_path = os.path.join(save_path, video_name)
+    
+    # if video does not exist, download it
+    if not os.path.isfile(os.path.join(save_path, video_name)):
+        print(f'Downloading video {video_name}...')
+        video.download(output_path=save_path, filename=video_name)
+    else:
+        print(f'Video {video_name} already exists.')
+
+    # # If the downloaded video is in WebM format, convert it to MP4 using FFmpeg
+    # if ext_part.lower() == '.webm' and not os.path.isfile(os.path.splitext(video_file_path)[0] + '.mp4'):
+    #     mp4_output_path = os.path.splitext(video_file_path)[0] + '.mp4'
+    #     print("converting")
+    #     subprocess.run(['ffmpeg', '-i', video_file_path, '-c:v', 'libx264', '-c:a', 'aac', mp4_output_path], check=True)
+    #     os.remove(video_file_path)  # Remove the original WebM file
+
+    #     return mp4_output_path
+
+    return video_file_path
