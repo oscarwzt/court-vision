@@ -32,7 +32,8 @@ We looked at the feature map to see if the model is looking at the wrong thing. 
 Empty basket:
 <img src="display_images/miss_heatmap.png" alt="Miss Heatmap" width="500"/>    
 
-with a ball:
+with a ball:     
+
 <img src="display_images/made_heatmap.png" alt="Made Heatmap" width="500"/>
 
 We hypothesize that the poor performance of the system despite the excellent performance of ResNet50 during trainig and testing is due to data leakage. Because we have many images of hoops from the same backgrounds, the training, validation, and testing sets will contain images from the same background. To improve this, we need to first split the videos where we get the images from into 3 sets, and then crop the hoops.
