@@ -6,14 +6,20 @@ Finding all scoring highlights in an amateur basketball video is time consuming.
 
 ## Repository and Code Structure
 
-`detection.py` contains functions for both highlight detecting and generating. For now, it only works on local files.   
- 
-`generateImages.ipynb` generates images for model training from YouTube links. It can also save the YouTube video, as well as clipping the video into a shorter one for model testing (run `detection.py`) 
+`cls_detection.py` is the script that inference on a video witht the YOLO+ResNet50 system, which returns the scoring timestamps and probabilities. 
+Run `python cls_detection.py [YOLO_MODEL_PATH] [CLS_MODEL_PATH] [VIDEO_PATH]` with options like `--cls_conf_threshold` and `--save_result_vid` to process videos using YOLO and classification models with customizable settings.
+You can also try it in `detection_with_cls.ipynb`. We used this notebook to test the performance of YOLO+ResNet50  
+`detection_only.ipynb` is the notebook that let's you try the YOLO+conditions system.  
+
+
+
+
 
 ## Results
 
 ### YOLO + Resnet50
-  
+ ![Classification Training Result](display_images/cls_train_result.png)
+
 ### YOLO
 <img width="288" alt="image" src="https://github.com/oscarwzt/court-vision/assets/117058428/7ccef222-788b-4db5-a657-d25f40a593f0">
 
