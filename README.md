@@ -66,5 +66,5 @@ We developed the trajectory technique to predict made shots by the ball path wit
 
 ## Conclusion
 
-To summarize our project, we first experimented with different object detection models and then proposed combining a classification model for better performance. After training and evaluating candidate models, we narrowed down YOLOv8-Large and ResNet50 as top choices. We created two systems using these models for scoring detection and evaluated them on a basketball video dataset. However, issues around depth perspective, video quality, and generalization remain. Going forward, approaches such as model ensembles or temporal video analysis may better capture the intricacies of amateur basketball footage.
+To summarize our project, we first experimented with different object detection models and then proposed combining a classification model for better performance. After training and evaluating candidate models, we narrowed down YOLOv8-Large and ResNet50 as top choices. We created two systems using these models for scoring detection and evaluated them on amateur basketball video dataset. However, issues around depth perspective, video quality, and generalization remain. Going forward, approaches such as model ensembles or temporal video analysis may better capture the intricacies of amateur basketball footage.
   
