@@ -18,7 +18,23 @@ You can also try it in `detection_with_cls.ipynb`. We used this notebook to test
 ## Results
 
 ### YOLO + Resnet50
+ResNet50 training result:
  ![Classification Training Result](display_images/cls_train_result.png)
+
+YOLOv8-Large training result:
+![YOLO Results](display_images/yolo_results.png)
+
+
+The performance of this system is underwhelming, see below confusion matrix:
+<img src="display_images/conf_mat.png" alt="Confusion Matrix" width="500"/>
+
+We looked at the feature map to see if the model is looking at the wrong thing. It seems like ResNet is look at the correct things: we can tell that some of the filters are looking at the net, and some are looking at the ball (if present).
+Empty basket:
+![Miss Heatmap](display_images/miss_heatmap.png)
+with a ball:
+![Made Heatmap](display_images/made_heatmap.png)
+
+ 
 
 ### YOLO
 <img width="288" alt="image" src="https://github.com/oscarwzt/court-vision/assets/117058428/7ccef222-788b-4db5-a657-d25f40a593f0">
