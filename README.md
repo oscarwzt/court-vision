@@ -8,7 +8,7 @@ Finding all scoring highlights in an amateur basketball video is time consuming.
 
 `cls_detection.py` is the script that inference on a video witht the YOLO+ResNet50 system, which returns the scoring timestamps and probabilities. 
 Run `python cls_detection.py [YOLO_MODEL_PATH] [CLS_MODEL_PATH] [VIDEO_PATH]` with options like `--cls_conf_threshold` and `--save_result_vid` to process videos using YOLO and classification models with customizable settings.
-You can also try it in `detection_with_cls.ipynb`. We used this notebook to test the performance of YOLO+ResNet50  
+You can also try it in `detection_with_cls.ipynb`. We used this notebook to test the performance of YOLO+ResNet50.  
 `detection_only.ipynb` is the notebook for the YOLO+conditions system.  
 
 
