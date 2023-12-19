@@ -64,4 +64,7 @@ The entire ball approach is further limited by the basketball net obstruction.
 
 We developed the trajectory technique to predict made shots by the ball path without needing to visually see inside the hoop. This improved false negatives but fundamentally cannot resolve false positives of balls passing behind/in-front of the hoop in 2D view.
 
+## Conclusion
+
+To summarize our project, we first experimented with different object detection models and then proposed combining a classification model for better performance. After training and evaluating candidate models, we narrowed down YOLOv8-Large and ResNet50 as top choices. We created two systems using these models for scoring detection and evaluated them on a basketball video dataset. However, issues around depth perspective, video quality, and generalization remain. Going forward, approaches such as model ensembles or temporal video analysis may better capture the intricacies of amateur basketball footage.
   
