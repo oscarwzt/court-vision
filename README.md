@@ -28,11 +28,13 @@ YOLOv8-Large training result:
 The performance of this system is underwhelming, see below confusion matrix:
 <img src="display_images/conf_mat.png" alt="Confusion Matrix" width="500"/>
 
-We looked at the feature map to see if the model is looking at the wrong thing. It seems like ResNet is look at the correct things: we can tell that some of the filters are looking at the net, and some are looking at the ball (if present).
+We looked at the feature map to see if the model is looking at the wrong thing. It seems like ResNet is looking at the correct things: we can tell that some of the filters are looking at the net, and some are looking at the ball (if present).
+
 Empty basket:
+
 <img src="display_images/miss_heatmap.png" alt="Miss Heatmap" width="500"/>    
 
-with a ball:     
+With a ball:     
 
 <img src="display_images/made_heatmap.png" alt="Made Heatmap" width="500"/>
 
