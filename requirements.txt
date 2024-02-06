@@ -9,8 +9,8 @@ onnxruntime==1.13.1
 opencv_python==4.8.1.78
 opencv_python_headless==4.8.0.74
 pandas==2.1.4
-Pillow==10.1.0
-Pillow==10.1.0
+Pillow==10.2.0
+Pillow==10.2.0
 psutil==5.9.0
 psutil==5.9.6
 pycocotools==2.0.6
