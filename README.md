@@ -1,5 +1,6 @@
 # Court Vision
-This pproject applies object detection and image classification to automatically detect scoring events in amateur basketball videos.
+This project applies object detection and image classification to automatically detect scoring events in amateur basketball videos.
+For the latest progress, please contact me.
 
 ## Introduction
 Finding all scoring highlights in an amateur basketball video is time consuming. Unlike professional games where each score triggers a game clock stoppage or replay, amateur games lack these built-in cues. This makes it difficult to spot scoring events. Our goal is to develop a system to automatically detect scoring events in those footages.
